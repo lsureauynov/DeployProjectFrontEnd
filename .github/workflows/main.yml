@@ -1,10 +1,10 @@
-name: Deploy Backend
+name: Deploy Frontend
 
 on:
   push:
     branches:
       - main
-      - develop
+      - dev
       - test
 
 jobs:
@@ -13,27 +13,33 @@ jobs:
 
     strategy:
       matrix:
-        env: [1, 2, 3]
+        env: [dev, test, prod]
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up JDK 11
-      uses: actions/setup-java@v2
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
       with:
-        java-version: '17'
+        node-version: '14'
 
-    - name: Build with Maven
-      run: mvn clean install
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build project
+      run: npm run build
 
     - name: Set environment variables
-      run: echo "AZURE_WEBAPP_PUBLISH_PROFILE=${{ secrets['AZURE_CREDENTIALS_DEPLOYPROJECT' + matrix.env | toUpperCase()] }}" >> $GITHUB_ENV
+      run: |
+        if [ "${{ matrix.env }}" == "dev" ]; then echo "AZURE_WEBAPP_PUBLISH_PROFILE=${{ secrets.AZURE_CREDENTIALS_DEPLOYPROJECT1 }}" >> $GITHUB_ENV; fi
+        if [ "${{ matrix.env }}" == "test" ]; then echo "AZURE_WEBAPP_PUBLISH_PROFILE=${{ secrets.AZURE_CREDENTIALS_DEPLOYPROJECT2 }}" >> $GITHUB_ENV; fi
+        if [ "${{ matrix.env }}" == "prod" ]; then echo "AZURE_WEBAPP_PUBLISH_PROFILE=${{ secrets.AZURE_CREDENTIALS_DEPLOYPROJECT3 }}" >> $GITHUB_ENV; fi
 
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
-        app-name: myapp-backend-${{ matrix.env }}
+        app-name: myapp-frontend-${{ matrix.env }}
         publish-profile: ${{ env.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: target/*.jar
+        package: .
 
