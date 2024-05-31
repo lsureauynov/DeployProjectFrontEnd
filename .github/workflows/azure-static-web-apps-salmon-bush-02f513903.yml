@@ -1,46 +1,36 @@
-name: Azure Static Web Apps CI/CD
+name: Build and Deploy Node.js/Vue.js app to Azure Static Web Apps
 
 on:
   push:
     branches:
-      - test
-  pull_request:
-    types: [opened, synchronize, reopened, closed]
-    branches:
-      - test
+      - test  # Remplacez "main" par la branche que vous souhaitez utiliser pour déclencher le déploiement
 
 jobs:
-  build_and_deploy_job:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+  build_and_deploy:
     runs-on: ubuntu-latest
-    name: Build and Deploy Job
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: true
-          lfs: false
-      - name: Build And Deploy
-        id: builddeploy
-        uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_SALMON_BUSH_02F513903 }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
-          action: "upload"
-          ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
-          # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: "/" # App source code path
-          api_location: "" # Api source code path - optional
-          output_location: "" # Built app content directory - optional
-          ###### End of Repository/Build Configurations ######
 
-  close_pull_request_job:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    name: Close Pull Request Job
     steps:
-      - name: Close Pull Request
-        id: closepullrequest
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'  # Remplacez par la version de Node.js que vous utilisez
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Deploy to Azure Static Web Apps
+        id: deploy
         uses: Azure/static-web-apps-deploy@v1
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_SALMON_BUSH_02F513903 }}
-          action: "close"
+          azure_static_web_apps_api_token: 2dfda37e6bdd4d8d4136f5ef498a72b0c9475cf258f6aa65904281a4c551caf55-570d9220-5fb1-4568-9aa5-38df89672965003473716  # Créez ce secret dans votre dépôt GitHub
+          repo_token: ${{ secrets.GITHUB_TOKEN }}  # Utilisé pour les vérifications de statut
+          action: 'upload'
+          app_location: '/'  # Dossier racine de l'application
+          output_location: 'dist'  # Dossier où les fichiers construits sont situés (ajustez si nécessaire)
+          api_location: ''  # Dossier de l'API si vous en avez une (laissez vide sinon)
